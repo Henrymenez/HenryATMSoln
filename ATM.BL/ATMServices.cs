@@ -118,7 +118,7 @@ namespace ATM.BL
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
                 string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE Id = @UserId";
-                SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
+                await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
                 new SqlParameter
@@ -132,7 +132,7 @@ namespace ATM.BL
                 });
 
                 userViewModel user = new userViewModel();
-                using (SqlDataReader dataReader = command.ExecuteReader())
+                using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
                 {
                     while (dataReader.Read())
                     {
@@ -151,7 +151,7 @@ namespace ATM.BL
 
                 command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE Id = @UserId";
 
-                var result = command.ExecuteNonQuery();
+                var result = await command.ExecuteNonQueryAsync();
 
                 if (result > 0)
                 {
@@ -196,7 +196,7 @@ namespace ATM.BL
                 }
 
                });
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                     Console.WriteLine($"Withdrawal Successful");
                 }
                 else
@@ -223,7 +223,7 @@ namespace ATM.BL
 
                 //senders info
                 string senderInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE Id = @senderId";
-                SqlCommand command = new SqlCommand(senderInfo, sqlConn);
+                await using SqlCommand command = new SqlCommand(senderInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
                 new SqlParameter
@@ -237,7 +237,7 @@ namespace ATM.BL
                 });
 
                 userViewModel senderObj = new userViewModel();
-                using (SqlDataReader dataReaderSender = command.ExecuteReader())
+                using (SqlDataReader dataReaderSender = await command.ExecuteReaderAsync())
                 {
                     while (dataReaderSender.Read())
                     {
@@ -255,7 +255,7 @@ namespace ATM.BL
                 //Receivers Info
 
                 string receiverInfo = $"SELECT Users.balance,Users.userId,Users.name FROM Users WHERE Id = @receiverId";
-                SqlCommand command2 = new SqlCommand(receiverInfo, sqlConn);
+                await using SqlCommand command2 = new SqlCommand(receiverInfo, sqlConn);
                 command2.Parameters.AddRange(new SqlParameter[]
                 {
                 new SqlParameter
@@ -269,7 +269,7 @@ namespace ATM.BL
                 });
 
                 userViewModel receiverObj = new userViewModel();
-                using (SqlDataReader dataReaderReceiver = command2.ExecuteReader())
+                using (SqlDataReader dataReaderReceiver = await command2.ExecuteReaderAsync())
                 {
                     while (dataReaderReceiver.Read())
                     {
@@ -287,14 +287,14 @@ namespace ATM.BL
                 //update sender
                 command.CommandText = $"UPDATE  Users SET balance = {senderObj.balance}  WHERE Id = @senderId";
 
-                var result = command.ExecuteNonQuery();
+                var result = await command.ExecuteNonQueryAsync();
 
                 if (result > 0)
                 {
                     //update receiver
                     command2.CommandText = $"UPDATE  Users SET balance = {receiverObj.balance}  WHERE Id = @receiverId";
 
-                    var result2 = command2.ExecuteNonQuery();
+                    var result2 = await command2.ExecuteNonQueryAsync();
 
                     if (result2 > 0)
                     {
@@ -345,7 +345,7 @@ namespace ATM.BL
                 }
 
                    });
-                        command.ExecuteNonQuery();
+                        await command.ExecuteNonQueryAsync();
                         Console.WriteLine($"Transfer Successful");
                     }
                     else

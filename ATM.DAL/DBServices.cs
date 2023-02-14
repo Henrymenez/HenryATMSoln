@@ -6,16 +6,16 @@ namespace ATM.DAL
 {
     public class DBServices : IDBServices
     {
-        private SqlConnection connection;
+        private SqlConnection connection = new SqlConnection(@"Data Source=DESKTOP-DM3DDUO\SQLEXPRESS;Initial Catalog=MyAtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
         private bool _disposed;
         public void createDB()
         {
             String ConnectionString;
-            connection = new SqlConnection("Server=DESKTOP-DM3DDUO\\SQLEXPRESS;Integrated security=SSPI;database=master");
+            SqlConnection connectionDb = new SqlConnection("Server=DESKTOP-DM3DDUO\\SQLEXPRESS;Integrated security=SSPI;database=master");
 
             ConnectionString = "CREATE DATABASE MyAtmDB";
 
-            SqlCommand myCommand = new SqlCommand(ConnectionString, connection);
+            SqlCommand myCommand = new SqlCommand(ConnectionString, connectionDb);
             try
             {
                 connection.Open();
@@ -37,9 +37,6 @@ namespace ATM.DAL
         }
         public void createUserTable()
         {
-
-            connection = new SqlConnection(@"Data Source=DESKTOP-DM3DDUO\SQLEXPRESS;Initial Catalog=MyAtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-
             string createQ = "CREATE TABLE Users( id INT UNIQUE IDENTITY(1,1) NOT NULL," +
                     "userId uniqueidentifier NOT NULL UNIQUE  DEFAULT newid()," +
                     "name VARCHAR(70) NOT NULL, " +
@@ -74,7 +71,6 @@ namespace ATM.DAL
         }
         public void insertUserDemoData()
         {
-            connection = new SqlConnection(@"Data Source=DESKTOP-DM3DDUO\SQLEXPRESS;Initial Catalog=MyAtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
             string insertQuery =
                $"INSERT INTO USERS (Name, cardNumber, cardPin, balance,status)   " +
@@ -109,7 +105,7 @@ namespace ATM.DAL
 
         public void createTransactionTable()
         {
-            connection = new SqlConnection(@"Data Source=DESKTOP-DM3DDUO\SQLEXPRESS;Initial Catalog=MyAtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            
 
             string createQ = "CREATE TABLE Transactions( id INT UNIQUE IDENTITY(1,1) NOT NULL," +
                     "userId uniqueidentifier NOT NULL," +
