@@ -10,7 +10,7 @@ namespace ATM.DAL
     {
         Task deposit(Guid id, decimal amount);
         Task withdraw(Guid id, decimal amount);
-        Task transfer(int sender, int receiver, decimal amount);
+        Task transfer(Guid sender, Guid receiver, decimal amount);
 
         Task checkBalance(Guid sender);
         Task<userViewModel> CheckCardNumber(string cardNumber);

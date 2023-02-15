@@ -36,6 +36,7 @@ namespace ATM.BL
             return 0;
         }
 
+
         public static async Task Run()
         {
 
@@ -78,7 +79,21 @@ namespace ATM.BL
                                         await aTMServices.checkBalance(user.UserId);
                                         break;
                                     case "4":
-                                        Console.WriteLine("Option 4: Transfer");
+                                        Console.WriteLine("Card Number you want to transfer to: ");
+                                        string cardNumberTransferTo = Console.ReadLine();
+
+                                        var transferUser = await aTMServices.CheckCardNumber(cardNumberTransferTo);
+                                        if (transferUser.UserId != null)
+                                        {
+                                            amount = collectAmount();
+                                            await aTMServices.transfer(user.UserId, transferUser.UserId, amount);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Wrong Card number");
+                                        }
+
+                                      
                                         break;
                                     case "5":
                                         Console.WriteLine("Thank you and Goodbye");

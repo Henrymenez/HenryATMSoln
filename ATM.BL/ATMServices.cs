@@ -257,7 +257,8 @@ namespace ATM.BL
 
         }
 
-        public async Task transfer(int sender, int receiver, decimal amount)
+
+        public async Task transfer(Guid sender, Guid receiver, decimal amount)
         {
             try
             {
@@ -265,7 +266,7 @@ namespace ATM.BL
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
                 //senders info
-                string senderInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE Id = @senderId";
+                string senderInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @senderId";
                 await using SqlCommand command = new SqlCommand(senderInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -273,7 +274,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@senderId",
                     Value = sender,
-                    SqlDbType = SqlDbType.Int,
+                    SqlDbType = SqlDbType.UniqueIdentifier,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -297,7 +298,7 @@ namespace ATM.BL
 
                 //Receivers Info
 
-                string receiverInfo = $"SELECT Users.balance,Users.userId,Users.name FROM Users WHERE Id = @receiverId";
+                string receiverInfo = $"SELECT Users.balance,Users.userId,Users.name FROM Users WHERE UserId = @receiverId";
                 await using SqlCommand command2 = new SqlCommand(receiverInfo, sqlConn);
                 command2.Parameters.AddRange(new SqlParameter[]
                 {
@@ -305,7 +306,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@receiverId",
                     Value = receiver,
-                    SqlDbType = SqlDbType.Int,
+                    SqlDbType = SqlDbType.UniqueIdentifier,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -328,14 +329,14 @@ namespace ATM.BL
                 receiverObj.balance = receiverObj.balance + amount;
 
                 //update sender
-                command.CommandText = $"UPDATE  Users SET balance = {senderObj.balance}  WHERE Id = @senderId";
+                command.CommandText = $"UPDATE  Users SET balance = {senderObj.balance}  WHERE userId = @senderId";
 
                 var result = await command.ExecuteNonQueryAsync();
 
                 if (result > 0)
                 {
                     //update receiver
-                    command2.CommandText = $"UPDATE  Users SET balance = {receiverObj.balance}  WHERE Id = @receiverId";
+                    command2.CommandText = $"UPDATE  Users SET balance = {receiverObj.balance}  WHERE userId = @receiverId";
 
                     var result2 = await command2.ExecuteNonQueryAsync();
 
