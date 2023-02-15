@@ -9,8 +9,7 @@ namespace ATM.UI
 
         static async Task Main(string[] args)
         {
-
-           await ATMClient.Run();
+            await ATMImplementation.Run();
         }
     }
 }

@@ -2,7 +2,6 @@
 using ATM.DAL.models;
 using Microsoft.Data.SqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
@@ -16,6 +15,49 @@ namespace ATM.BL
         public ATMServices(AtmDBConnect atmDBConnect)
         {
             _dbContext = atmDBConnect;
+        }
+        public async Task<userViewModel> CheckCardNumber(string cardnumber)
+        {
+            userViewModel user = new userViewModel();
+            try
+            {
+                SqlConnection sqlConn = await _dbContext.OpenConnection();
+
+                string getUserInfo = $"SELECT Users.name,Users.userId,Users.cardPin FROM Users WHERE cardNumber = @cardnumber";
+                await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn); 
+                command.Parameters.AddRange(new SqlParameter[]
+                {
+                new SqlParameter
+                {
+                    ParameterName = "@cardnumber",
+                    Value = cardnumber,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input,
+                    Size = 15
+                }
+                });
+               
+
+                using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
+                {
+                    while (dataReader.Read())
+                    {
+                       user.Name = dataReader["name"].ToString();
+                        user.UserId = (Guid)dataReader["userId"];
+                        user.cardPin = Convert.ToInt32(dataReader["cardPin"]);
+                    }
+                }
+
+                return user;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+
+            }
+            return user;
         }
 
         public async Task deposit(int id, decimal amount)
@@ -410,60 +452,60 @@ namespace ATM.BL
             }
         }
 
-       /* public async Task checkStatment(Guid id)
-        {
-            try
-            {
-                SqlConnection sqlConn = await _dbContext.OpenConnection();
+        /* public async Task checkStatment(Guid id)
+         {
+             try
+             {
+                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getTransactionInfo = $"SELECT Transactions.userId,Transactions.receiverId,Transactions.desctiption,Transactions.amount,Transactions.transactionType,Transactions.status,Transactions.createdAt FROM Transactions WHERE userId = @UserId";
-                await using SqlCommand command = new SqlCommand(getTransactionInfo, sqlConn);
-                command.Parameters.AddRange(new SqlParameter);[]
-                {
-                new SqlParameter
-                {
-                    ParameterName = "@UserId",
-                    Value = id,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
-                    Direction = ParameterDirection.Input,
-                    Size = 50
-                }
-                }
-                List<transactionViewModel> transactions = new List<transactionViewModel>();
-                using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
-                {
-                    while (dataReader.Read())
-                    {
-                        transactions.Add(new transactionViewModel()
-                        {
-                            UserId = (Guid)dataReader["userId"],
-                            ReceiverId = dataReader["receiverId"].ToString() ?? " ",
-                            Description = dataReader["desctiption"].ToString(),
-                            TransactionType = dataReader["transactionType"].ToString(),
-                            Amount = (decimal)dataReader["amount"],
-                            Status = (bool)dataReader["status"],
-                            CreatedAt = (DateTime)dataReader["createdAt"]
-                        });
+                 string getTransactionInfo = $"SELECT Transactions.userId,Transactions.receiverId,Transactions.desctiption,Transactions.amount,Transactions.transactionType,Transactions.status,Transactions.createdAt FROM Transactions WHERE userId = @UserId";
+                 await using SqlCommand command = new SqlCommand(getTransactionInfo, sqlConn);
+                 command.Parameters.AddRange(new SqlParameter);[]
+                 {
+                 new SqlParameter
+                 {
+                     ParameterName = "@UserId",
+                     Value = id,
+                     SqlDbType = SqlDbType.UniqueIdentifier,
+                     Direction = ParameterDirection.Input,
+                     Size = 50
+                 }
+                 }
+                 List<transactionViewModel> transactions = new List<transactionViewModel>();
+                 using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
+                 {
+                     while (dataReader.Read())
+                     {
+                         transactions.Add(new transactionViewModel()
+                         {
+                             UserId = (Guid)dataReader["userId"],
+                             ReceiverId = dataReader["receiverId"].ToString() ?? " ",
+                             Description = dataReader["desctiption"].ToString(),
+                             TransactionType = dataReader["transactionType"].ToString(),
+                             Amount = (decimal)dataReader["amount"],
+                             Status = (bool)dataReader["status"],
+                             CreatedAt = (DateTime)dataReader["createdAt"]
+                         });
 
 
-                    }
-                }
+                     }
+                 }
 
-                foreach (transactionViewModel transaction in transactions)
-                {
-                    Console.WriteLine($"User: {transaction.UserId}, Receiver: {transaction.ReceiverId}, " +
-                        $"Description: {transaction.Description}, Type: {transaction.TransactionType}, " +
-                        $"Amount: ${transaction.Amount}, Status: {transaction.Status}, Date: {transaction.CreatedAt}    \n");
-                }
+                 foreach (transactionViewModel transaction in transactions)
+                 {
+                     Console.WriteLine($"User: {transaction.UserId}, Receiver: {transaction.ReceiverId}, " +
+                         $"Description: {transaction.Description}, Type: {transaction.TransactionType}, " +
+                         $"Amount: ${transaction.Amount}, Status: {transaction.Status}, Date: {transaction.CreatedAt}    \n");
+                 }
 
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
+             }
+             catch (Exception ex)
+             {
+                 Console.WriteLine(ex.Message);
+                 Console.WriteLine(ex.StackTrace);
 
-            }
-        }*/
+             }
+         }*/
 
         protected virtual void Dispose(bool disposing)
         {
@@ -486,5 +528,6 @@ namespace ATM.BL
             GC.SuppressFinalize(this);
         }
 
+  
     }
 }
