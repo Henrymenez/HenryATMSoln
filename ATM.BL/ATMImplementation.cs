@@ -12,50 +12,102 @@ namespace ATM.BL
         {
 
 
-            Console.WriteLine("Please choose from one of these following options..!");
-            Console.WriteLine("1. Deposit");
-            Console.WriteLine("2. Withdraw");
-            Console.WriteLine("3. Show Balance");
-            Console.WriteLine("4. Transfer");
-            Console.WriteLine("5. Exit");
+            Console.WriteLine("Please choose from one of these following options..! \n" +
+                "1. Deposit \n" +
+                "2. Withdraw \n" +
+                "3. Show Balance \n" +
+                "4. Transfer \n" +
+                "5. Exit");
 
+        }
 
+        public static decimal collectAmount()
+        {
+            Console.Clear();
+            Console.Write("Amount: ");
+            decimal amount;
+            bool check = decimal.TryParse(Console.ReadLine(), out amount);
+
+            if (check)
+            {
+                return amount;
+            }
+
+            return 0;
         }
 
         public static async Task Run()
         {
 
-            Console.WriteLine("Welcome To Henry ATM \n");
-        start: Console.WriteLine("Please Insert Your Card Number: ");
+            Console.WriteLine("\t \t Welcome To Henry ATM");
+        start: Console.WriteLine("\t Please Insert Your Card Number:  \n");
             string cardnumber = Console.ReadLine();
-            Console.WriteLine(cardnumber);
-
 
             using (IAtmServices aTMServices = new ATMServices(new AtmDBConnect()))
             {
-                var user = await aTMServices.CheckCardNumber(cardnumber);
-                if (user.Name != null)
+                while (true)
                 {
-                    Console.WriteLine("Please Insert Card Pin: ");
-                    int cardpin = int.Parse(Console.ReadLine());
-
-                    if (user.cardPin == cardpin)
+                    try
                     {
-                        Console.Clear();
-                        printOptions();
+                        var user = await aTMServices.CheckCardNumber(cardnumber);
+                        if (user.Name != null)
+                        {
+
+                        start2: Console.WriteLine($"\t \tHello {user.Name} \n \t Please Insert Card Pin: ");
+                            int pinNumber;
+                            bool cardpin = int.TryParse(Console.ReadLine(), out pinNumber);
+
+                            if ((user.cardPin == pinNumber) && cardpin)
+                            {
+                                Console.Clear();
+                            start3: printOptions();
+                                string option = Console.ReadLine();
+                                decimal amount;
+                                switch (option)
+                                {
+                                    case "1":
+                                        amount = collectAmount();
+                                        await aTMServices.deposit(user.UserId, amount);
+                                        break;
+                                    case "2":
+
+                                        amount = collectAmount();
+                                        await aTMServices.withdraw(user.UserId, amount);
+                                        break;
+                                    case "3":
+                                        await aTMServices.checkBalance(user.UserId);
+                                        break;
+                                    case "4":
+                                        Console.WriteLine("Option 4: Transfer");
+                                        break;
+                                    case "5":
+                                        Console.WriteLine("Thank you and Goodbye");
+                                        Environment.Exit(0);
+                                        break;
+                                    default:
+                                        goto start3;
+
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Incorrect card Pin");
+                                goto start2;
+                            }
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("incorrect card number");
+                            goto start;
+                        }
+
                     }
-                    else
+                    catch (Exception e)
                     {
-                        Console.WriteLine("Incorrect card Pin");
+                        Console.WriteLine(e.ToString());
                     }
-
                 }
-                else
-                {
-                    Console.WriteLine("incorrect card number");
-                    goto start;
-                }
-
                 // await aTMServices.deposit(1, 850);
                 // await aTMServices.withdraw(1, 10850);
                 // await aTMServices.transfer(1, 2, 10000);

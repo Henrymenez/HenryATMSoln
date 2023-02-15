@@ -24,7 +24,7 @@ namespace ATM.BL
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
                 string getUserInfo = $"SELECT Users.name,Users.userId,Users.cardPin FROM Users WHERE cardNumber = @cardnumber";
-                await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn); 
+                await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
                 new SqlParameter
@@ -36,13 +36,13 @@ namespace ATM.BL
                     Size = 15
                 }
                 });
-               
+
 
                 using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
                 {
                     while (dataReader.Read())
                     {
-                       user.Name = dataReader["name"].ToString();
+                        user.Name = dataReader["name"].ToString();
                         user.UserId = (Guid)dataReader["userId"];
                         user.cardPin = Convert.ToInt32(dataReader["cardPin"]);
                     }
@@ -60,13 +60,13 @@ namespace ATM.BL
             return user;
         }
 
-        public async Task deposit(int id, decimal amount)
+        public async Task deposit(Guid id, decimal amount)
         {
             try
             {
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE Id = @UserId";
+                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @UserId";
                 await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -74,9 +74,9 @@ namespace ATM.BL
                 {
                     ParameterName = "@UserId",
                     Value = id,
-                    SqlDbType = SqlDbType.Int,
+                    SqlDbType = SqlDbType.UniqueIdentifier,
                     Direction = ParameterDirection.Input,
-                    Size = 50
+
                 }
                 });
                 userViewModel user = new userViewModel();
@@ -90,7 +90,7 @@ namespace ATM.BL
                 }
                 user.balance = user.balance + amount;
 
-                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE Id = @UserId";
+                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE userId = @UserId";
 
                 var result = await command.ExecuteNonQueryAsync();
 
@@ -154,13 +154,13 @@ namespace ATM.BL
             }
         }
 
-        public async Task withdraw(int id, decimal amount)
+        public async Task withdraw(Guid id, decimal amount)
         {
             try
             {
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE Id = @UserId";
+                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @UserId";
                 await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -168,7 +168,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@UserId",
                     Value = id,
-                    SqlDbType = SqlDbType.Int,
+                    SqlDbType = SqlDbType.UniqueIdentifier,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -192,7 +192,7 @@ namespace ATM.BL
 
                 user.balance = user.balance - amount;
 
-                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE Id = @UserId";
+                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE userId = @UserId";
 
                 var result = await command.ExecuteNonQueryAsync();
 
@@ -412,13 +412,13 @@ namespace ATM.BL
         }
 
 
-        public async Task checkBalance(int id)
+        public async Task checkBalance(Guid id)
         {
             try
             {
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE Id = @UserId";
+                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @UserId";
                 await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -426,7 +426,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@UserId",
                     Value = id,
-                    SqlDbType = SqlDbType.Int,
+                    SqlDbType = SqlDbType.UniqueIdentifier,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -528,6 +528,6 @@ namespace ATM.BL
             GC.SuppressFinalize(this);
         }
 
-  
+
     }
 }
