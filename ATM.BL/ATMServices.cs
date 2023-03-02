@@ -23,7 +23,7 @@ namespace ATM.BL
             {
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getUserInfo = $"SELECT Users.name,Users.userId,Users.cardPin FROM Users WHERE cardNumber = @cardnumber";
+                string getUserInfo = $"SELECT Users.name,Users.Id,Users.Pin FROM Users WHERE CardNumber = @cardnumber";
                 await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -32,8 +32,8 @@ namespace ATM.BL
                     ParameterName = "@cardnumber",
                     Value = cardnumber,
                     SqlDbType = SqlDbType.VarChar,
-                    Direction = ParameterDirection.Input,
-                    Size = 15
+                    Direction = ParameterDirection.Input
+                    
                 }
                 });
 
@@ -43,8 +43,8 @@ namespace ATM.BL
                     while (dataReader.Read())
                     {
                         user.Name = dataReader["name"].ToString();
-                        user.UserId = (Guid)dataReader["userId"];
-                        user.cardPin = Convert.ToInt32(dataReader["cardPin"]);
+                        user.userId =  Convert.ToInt32(dataReader["Id"]);
+                        user.cardPin = dataReader["Pin"].ToString();
                     }
                 }
 
@@ -59,14 +59,14 @@ namespace ATM.BL
             }
             return user;
         }
-
-        public async Task deposit(Guid id, decimal amount)
+        
+        public async Task deposit(int id, decimal amount)
         {
             try
             {
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @UserId";
+                string getUserInfo = $"SELECT Users.balance FROM Users WHERE Id = @UserId";
                 await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -74,7 +74,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@UserId",
                     Value = id,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input,
 
                 }
@@ -85,66 +85,67 @@ namespace ATM.BL
                     while (dataReader.Read())
                     {
                         user.balance = (decimal)dataReader["balance"];
-                        user.UserId = (Guid)dataReader["userId"];
                     }
                 }
+                
                 user.balance = user.balance + amount;
 
-                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE userId = @UserId";
+                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE Id = @UserId";
 
                 var result = await command.ExecuteNonQueryAsync();
-
-                if (result > 0)
+                 if (result > 0)
+                 {
+                     DateTime myDateTime = DateTime.Now;
+                     string sqlFormat = myDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                     string desc = $"Deposited a sum of {amount} into your account, you current balance is {user.balance}";
+                     command.CommandText = $"INSERT INTO Transactions (userId,receiverId,transactionType,desctiption,amount,status,createdAt)" +
+                          $" VALUES (@sendId,null,'Deposit',@desc,@amount,1,@date)";
+                     command.Parameters.AddRange(new SqlParameter[]
                 {
-                    DateTime myDateTime = DateTime.Now;
-                    string sqlFormat = myDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    string desc = $"Deposited a sum of {amount} into your account, you current balance is {user.balance}";
-                    command.CommandText = $"INSERT INTO Transactions (userId,receiverId,transactionType,desctiption,amount,status,createdAt)" +
-                         $" VALUES (@sendId,null,'Deposit',@desc,@amount,1,@date)";
-                    command.Parameters.AddRange(new SqlParameter[]
-               {
-                new SqlParameter
-                {
-                    ParameterName = "@sendId",
-                    Value = user.UserId,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
-                    Direction = ParameterDirection.Input
-                },
                  new SqlParameter
-                {
-                    ParameterName = "@desc",
-                    Value = desc,
-                    SqlDbType = SqlDbType.NText,
-                    Direction = ParameterDirection.Input,
-
-                },
+                 {
+                     ParameterName = "@sendId",
+                     Value = id,
+                     SqlDbType = SqlDbType.Int,
+                     Direction = ParameterDirection.Input
+                 },
                   new SqlParameter
-                {
-                    ParameterName = "@amount",
-                    Value = amount,
-                    SqlDbType = SqlDbType.Decimal,
-                    Direction = ParameterDirection.Input,
+                 {
+                     ParameterName = "@desc",
+                     Value = desc,
+                     SqlDbType = SqlDbType.NText,
+                     Direction = ParameterDirection.Input,
 
-                },
+                 },
                    new SqlParameter
-                {
-                    ParameterName = "@date",
-                    Value = sqlFormat,
-                    SqlDbType = SqlDbType.DateTime,
-                    Direction = ParameterDirection.Input,
+                 {
+                     ParameterName = "@amount",
+                     Value = amount,
+                     SqlDbType = SqlDbType.Decimal,
+                     Direction = ParameterDirection.Input,
 
-                }
+                 },
+                    new SqlParameter
+                 {
+                     ParameterName = "@date",
+                     Value = sqlFormat,
+                     SqlDbType = SqlDbType.DateTime,
+                     Direction = ParameterDirection.Input,
 
-               });
-                    await command.ExecuteNonQueryAsync();
+                 }
 
+                });
+                     await command.ExecuteNonQueryAsync();
+                    Console.WriteLine(id);
+                    Console.WriteLine(user.balance);
+                    Console.WriteLine(result);
                     Console.WriteLine("Deposit Was successful");
-                }
-                else
-                {
-                    Console.WriteLine("Unsuccessful deposit");
+                 }
+                 else
+                 {
+                     Console.WriteLine("Unsuccessful deposit");
 
-                }
+                 }
             }
             catch (Exception ex)
             {
@@ -154,13 +155,13 @@ namespace ATM.BL
             }
         }
 
-        public async Task withdraw(Guid id, decimal amount)
+        public async Task withdraw(int id, decimal amount)
         {
             try
             {
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @UserId";
+                string getUserInfo = $"SELECT Users.balance FROM Users WHERE Id = @UserId";
                 await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -168,7 +169,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@UserId",
                     Value = id,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -180,7 +181,6 @@ namespace ATM.BL
                     while (dataReader.Read())
                     {
                         user.balance = (decimal)dataReader["balance"];
-                        user.UserId = (Guid)dataReader["userId"];
                     }
                 }
 
@@ -192,7 +192,7 @@ namespace ATM.BL
 
                 user.balance = user.balance - amount;
 
-                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE userId = @UserId";
+                command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE Id = @UserId";
 
                 var result = await command.ExecuteNonQueryAsync();
 
@@ -209,8 +209,8 @@ namespace ATM.BL
                 new SqlParameter
                 {
                     ParameterName = "@sendId",
-                    Value = user.UserId,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    Value = id,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input
                 },
                  new SqlParameter
@@ -258,7 +258,7 @@ namespace ATM.BL
         }
 
 
-        public async Task transfer(Guid sender, Guid receiver, decimal amount)
+        public async Task transfer(int sender, int receiver, decimal amount)
         {
             try
             {
@@ -266,7 +266,7 @@ namespace ATM.BL
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
                 //senders info
-                string senderInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @senderId";
+                string senderInfo = $"SELECT Users.balance FROM Users WHERE Id = @senderId";
                 await using SqlCommand command = new SqlCommand(senderInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -274,7 +274,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@senderId",
                     Value = sender,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -286,7 +286,6 @@ namespace ATM.BL
                     while (dataReaderSender.Read())
                     {
                         senderObj.balance = (decimal)dataReaderSender["balance"];
-                        senderObj.UserId = (Guid)dataReaderSender["userId"];
                     }
                 }
 
@@ -298,7 +297,7 @@ namespace ATM.BL
 
                 //Receivers Info
 
-                string receiverInfo = $"SELECT Users.balance,Users.userId,Users.name FROM Users WHERE UserId = @receiverId";
+                string receiverInfo = $"SELECT Users.balance,Users.name FROM Users WHERE Id = @receiverId";
                 await using SqlCommand command2 = new SqlCommand(receiverInfo, sqlConn);
                 command2.Parameters.AddRange(new SqlParameter[]
                 {
@@ -306,7 +305,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@receiverId",
                     Value = receiver,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -318,7 +317,6 @@ namespace ATM.BL
                     while (dataReaderReceiver.Read())
                     {
                         receiverObj.balance = (decimal)dataReaderReceiver["balance"];
-                        receiverObj.UserId = (Guid)dataReaderReceiver["userId"];
                         receiverObj.Name = (string)dataReaderReceiver["name"];
                     }
                 }
@@ -329,14 +327,14 @@ namespace ATM.BL
                 receiverObj.balance = receiverObj.balance + amount;
 
                 //update sender
-                command.CommandText = $"UPDATE  Users SET balance = {senderObj.balance}  WHERE userId = @senderId";
+                command.CommandText = $"UPDATE  Users SET balance = {senderObj.balance}  WHERE Id = @senderId";
 
                 var result = await command.ExecuteNonQueryAsync();
 
                 if (result > 0)
                 {
                     //update receiver
-                    command2.CommandText = $"UPDATE  Users SET balance = {receiverObj.balance}  WHERE userId = @receiverId";
+                    command2.CommandText = $"UPDATE  Users SET balance = {receiverObj.balance}  WHERE Id = @receiverId";
 
                     var result2 = await command2.ExecuteNonQueryAsync();
 
@@ -352,15 +350,15 @@ namespace ATM.BL
                 new SqlParameter
                 {
                     ParameterName = "@sendId",
-                    Value = senderObj.UserId,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    Value = sender,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input
                 },
                  new SqlParameter
                 {
                     ParameterName = "@receiverId",
-                    Value = receiverObj.UserId,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    Value = receiver,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input
                 },
                  new SqlParameter
@@ -413,13 +411,13 @@ namespace ATM.BL
         }
 
 
-        public async Task checkBalance(Guid id)
+        public async Task checkBalance(int id)
         {
             try
             {
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                string getUserInfo = $"SELECT Users.balance,Users.userId FROM Users WHERE userId = @UserId";
+                string getUserInfo = $"SELECT Users.balance FROM Users WHERE Id = @UserId";
                 await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
                 command.Parameters.AddRange(new SqlParameter[]
                 {
@@ -427,7 +425,7 @@ namespace ATM.BL
                 {
                     ParameterName = "@UserId",
                     Value = id,
-                    SqlDbType = SqlDbType.UniqueIdentifier,
+                    SqlDbType = SqlDbType.Int,
                     Direction = ParameterDirection.Input,
                     Size = 50
                 }
@@ -437,9 +435,7 @@ namespace ATM.BL
                 {
                     while (dataReader.Read())
                     {
-                        user.balance = (decimal)dataReader["balance"];
-                        user.UserId = (Guid)dataReader["userId"];
-                    }
+                        user.balance = (decimal)dataReader["balance"];                   }
                 }
 
                 Console.WriteLine($"Your Balance is ${user.balance}");

@@ -16,7 +16,11 @@ namespace ATM.DAL
 
         private SqlConnection _dbConnection = null;
 
-        public AtmDBConnect() : this(@"Data Source=DESKTOP-DM3DDUO\SQLEXPRESS;Initial Catalog=MyAtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False")
+        private static readonly string _connectionString = "Data Source=DESKTOP-DM3DDUO\\SQLEXPRESS;Initial Catalog=AtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            //ESKTOP-DM3DDUO\\SQLEXPRESS";
+
+
+        public AtmDBConnect() : this(@$"{_connectionString}")
         {
 
         }

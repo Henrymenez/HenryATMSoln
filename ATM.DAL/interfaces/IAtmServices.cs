@@ -8,11 +8,12 @@ namespace ATM.DAL
 {
     public  interface IAtmServices : IDisposable
     {
-        Task deposit(Guid id, decimal amount);
-        Task withdraw(Guid id, decimal amount);
-        Task transfer(Guid sender, Guid receiver, decimal amount);
+        
+        Task deposit(int id, decimal amount);
+        Task withdraw(int id, decimal amount);
+        Task transfer(int sender, int receiver, decimal amount);
 
-        Task checkBalance(Guid sender);
+        Task checkBalance(int sender);
         Task<userViewModel> CheckCardNumber(string cardNumber);
         // Task checkStatment(Guid id);
     }

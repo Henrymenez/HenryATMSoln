@@ -6,8 +6,8 @@ namespace ATM.DAL.models
 {
     public class transactionViewModel
     {
-        public Guid UserId { get; set; }
-        public string ReceiverId { get; set; }
+        public int userId { get; set; }
+        public int ReceiverId { get; set; }
 
         public string TransactionType { get; set; }
 

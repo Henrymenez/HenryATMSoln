@@ -1,40 +1,57 @@
-﻿using System;
+﻿/*using Microsoft.Data.SqlClient;
+using System;
 using System.Data;
-using Microsoft.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace ATM.DAL
 {
     public class DBServices : IDBServices
     {
-        private SqlConnection connection = new SqlConnection(@"Data Source=DESKTOP-DM3DDUO\SQLEXPRESS;Initial Catalog=MyAtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+        private SqlConnection connection2 = new SqlConnection(@"Data Source=DESKTOP-DM3DDUO\SQLEXPRESS;Initial Catalog=MyAtmDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
         private bool _disposed;
-        public void createDB()
+        private string _connectionString;
+        private SqlConnection connection;
+
+        public DBServices()
         {
-            String ConnectionString;
-            SqlConnection connectionDb = new SqlConnection("Server=DESKTOP-DM3DDUO\\SQLEXPRESS;Integrated security=SSPI;database=master");
 
-            ConnectionString = "CREATE DATABASE MyAtmDB";
+        }
+        public async Task createDB(string serverName)
+        {
+            string commandString;
+            connection = new SqlConnection($@"Server={serverName};Integrated security=SSPI;database=master");
 
-            SqlCommand myCommand = new SqlCommand(ConnectionString, connectionDb);
-            try
+            commandString = "IF NOT EXISTS(SELECT 1 FROM sys.databases WHERE name='MyAtmDB') CREATE DATABASE MyAtmDB ";
+
+            using (SqlCommand myCommand = new SqlCommand(commandString, connection))
             {
-                connection.Open();
-                myCommand.ExecuteNonQuery();
-                Console.WriteLine("DataBase is Created Successfully");
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
+                try
                 {
-                    connection.Close();
+                    await myCommand.ExecuteNonQueryAsync();
+                    Console.WriteLine("DataBase is Created Successfully");
+                    await connection.OpenAsync();
+
+                    commandString = " select  'data source=' + @@servername +   ';initial catalog=' +'ATMDatabase' +   case type_desc when 'WINDOWS_LOGIN' then ';trusted_connection=true'        else           ';user id=' + suser_name() + ';password=<<YourPassword>>'    end    as ConnectionString from sys.server_principals where name = suser_name()";
+                    _connectionString = (string)myCommand.ExecuteScalar();
+                    Console.WriteLine("Database Created: \n" +
+                        "DBName: MyAtmDB");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        await connection.CloseAsync();
+                    }
+
                 }
             }
 
         }
+
         public void createUserTable()
         {
             string createQ = "CREATE TABLE Users( id INT UNIQUE IDENTITY(1,1) NOT NULL," +
@@ -105,7 +122,7 @@ namespace ATM.DAL
 
         public void createTransactionTable()
         {
-            
+
 
             string createQ = "CREATE TABLE Transactions( id INT UNIQUE IDENTITY(1,1) NOT NULL," +
                     "userId uniqueidentifier NOT NULL," +
@@ -164,3 +181,4 @@ namespace ATM.DAL
 
     }
 }
+*/

@@ -10,15 +10,13 @@ namespace ATM.BL
 
         public static void printOptions()
         {
-
-
             Console.WriteLine("Please choose from one of these following options..! \n" +
                 "1. Deposit \n" +
                 "2. Withdraw \n" +
                 "3. Show Balance \n" +
                 "4. Transfer \n" +
-                "5. Exit");
-
+                "5. Statement of Account \n" +
+                "6. Exit");
         }
 
         public static decimal collectAmount()
@@ -37,9 +35,11 @@ namespace ATM.BL
         }
 
 
+
         public static async Task Run()
         {
-
+            await createAndUpdateDB.Start();
+            Console.Clear();
             Console.WriteLine("\t \t Welcome To Henry ATM");
         start: Console.WriteLine("\t Please Insert Your Card Number:  \n");
             string cardnumber = Console.ReadLine();
@@ -54,11 +54,11 @@ namespace ATM.BL
                         if (user.Name != null)
                         {
 
-                        start2: Console.WriteLine($"\t \tHello {user.Name} \n \t Please Insert Card Pin: ");
-                            int pinNumber;
-                            bool cardpin = int.TryParse(Console.ReadLine(), out pinNumber);
+                        start2: Console.WriteLine($"\t \tHello {user.userId} \n \t Please Insert Card Pin: ");
 
-                            if ((user.cardPin == pinNumber) && cardpin)
+                         
+                            string pinNumber = Console.ReadLine();
+                            if (user.cardPin == pinNumber)
                             {
                                 Console.Clear();
                             start3: printOptions();
@@ -68,38 +68,40 @@ namespace ATM.BL
                                 {
                                     case "1":
                                         amount = collectAmount();
-                                        await aTMServices.deposit(user.UserId, amount);
+                                        await aTMServices.deposit(user.userId, amount);
                                         break;
                                     case "2":
 
                                         amount = collectAmount();
-                                        await aTMServices.withdraw(user.UserId, amount);
+                                        await aTMServices.withdraw(user.userId, amount);
                                         break;
                                     case "3":
-                                        await aTMServices.checkBalance(user.UserId);
+                                        await aTMServices.checkBalance(user.userId);
                                         break;
                                     case "4":
                                         Console.WriteLine("Card Number you want to transfer to: ");
                                         string cardNumberTransferTo = Console.ReadLine();
 
                                         var transferUser = await aTMServices.CheckCardNumber(cardNumberTransferTo);
-                                        if (transferUser.UserId != null)
+                                        if (transferUser.userId != null)
                                         {
                                             amount = collectAmount();
-                                            await aTMServices.transfer(user.UserId, transferUser.UserId, amount);
+                                            await aTMServices.transfer(user.userId, transferUser.userId, amount);
                                         }
                                         else
                                         {
                                             Console.WriteLine("Wrong Card number");
                                         }
-
-                                      
                                         break;
                                     case "5":
+                                        Console.WriteLine("Selected Number 6");
+                                        break;
+                                    case "6":
                                         Console.WriteLine("Thank you and Goodbye");
                                         Environment.Exit(0);
                                         break;
                                     default:
+                                        Console.Clear();
                                         goto start3;
 
                                 }
@@ -123,14 +125,6 @@ namespace ATM.BL
                         Console.WriteLine(e.ToString());
                     }
                 }
-                // await aTMServices.deposit(1, 850);
-                // await aTMServices.withdraw(1, 10850);
-                // await aTMServices.transfer(1, 2, 10000);
-                // await aTMServices.checkBalance(1);\
-
-                /* string str = "8698FEA1-2605-415D-A3C4-951B3A4348F1";
-                Guid id = new Guid(str);
-                 await aTMServices.checkStatment(id);*/
             };
 
 
@@ -140,5 +134,8 @@ namespace ATM.BL
             // dBServices.insertUserDemoData();
             //dBServices.createTransactionTable();
         }
+
+
+
     }
 }

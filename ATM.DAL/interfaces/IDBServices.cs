@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ATM.DAL
 {
     public interface IDBServices: IDisposable
     {
-        void createDB();
+        Task createDatabase(string dataBase, string sqlQuery);
 
-        void createUserTable();
-        void insertUserDemoData();
-        void createTransactionTable();
+        Task createTable(string tableName, string sqlQuery);
+     
+        Task createUsers( string sqlQuery);
+
+        Task<bool> checkIfEmpty(string sqlQuery);
     }
 }

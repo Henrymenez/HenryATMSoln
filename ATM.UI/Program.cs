@@ -1,6 +1,4 @@
-﻿
-
-using ATM.BL;
+﻿using ATM.BL;
 
 namespace ATM.UI
 {
