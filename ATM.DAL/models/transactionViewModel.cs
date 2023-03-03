@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ATM.DAL.models
 {
     public class transactionViewModel
     {
         public int userId { get; set; }
-        public int ReceiverId { get; set; }
+        public string? ReceiverId { get; set; }
 
         public string TransactionType { get; set; }
 

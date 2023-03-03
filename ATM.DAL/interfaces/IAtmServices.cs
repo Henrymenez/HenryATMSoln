@@ -15,6 +15,8 @@ namespace ATM.DAL
 
         Task checkBalance(int sender);
         Task<userViewModel> CheckCardNumber(string cardNumber);
-        // Task checkStatment(Guid id);
+
+        Task<userViewModel> CheckAccountNumber(string accountNumber);
+        Task checkStatment(int id);
     }
 }

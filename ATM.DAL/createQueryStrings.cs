@@ -14,10 +14,10 @@
 					Name VARCHAR(100) NOT NULL,
 					Email VARCHAR(100) NOT NULL,
 					PhoneNumber VARCHAR(20) NOT NULL,
-					AccountNo VARCHAR(50) NOT NULL,
+					AccountNo VARCHAR(50) NOT NULL UNIQUE,
 					AccountType VARCHAR(50) NOT NULL,
 				Pin	VARCHAR(4) NOT NULL,
-CardNumber VARCHAR(100) NOT NULL,
+CardNumber VARCHAR(100) NOT NULL UNIQUE,
 					Balance DECIMAL NOT NULL,
 status BIT NOT NULL, 
 					);";

@@ -26,13 +26,15 @@ namespace ATM.BL
             decimal amount;
             bool check = decimal.TryParse(Console.ReadLine(), out amount);
 
-            if (check)
+            if (check && amount > 0)
             {
-                return amount;
+                return Math.Abs(amount);
             }
 
             return 0;
         }
+
+
 
 
 
@@ -54,9 +56,9 @@ namespace ATM.BL
                         if (user.Name != null)
                         {
 
-                        start2: Console.WriteLine($"\t \tHello {user.userId} \n \t Please Insert Card Pin: ");
+                        start2: Console.WriteLine($"\t \tHello {user.Name} \n \t Please Insert Card Pin: ");
 
-                         
+
                             string pinNumber = Console.ReadLine();
                             if (user.cardPin == pinNumber)
                             {
@@ -79,22 +81,22 @@ namespace ATM.BL
                                         await aTMServices.checkBalance(user.userId);
                                         break;
                                     case "4":
-                                        Console.WriteLine("Card Number you want to transfer to: ");
+                                        Console.WriteLine("Account Number you want to transfer to: ");
                                         string cardNumberTransferTo = Console.ReadLine();
 
-                                        var transferUser = await aTMServices.CheckCardNumber(cardNumberTransferTo);
-                                        if (transferUser.userId != null)
+                                        var transferUser = await aTMServices.CheckAccountNumber(cardNumberTransferTo);
+                                        if (transferUser.Name != null)
                                         {
                                             amount = collectAmount();
                                             await aTMServices.transfer(user.userId, transferUser.userId, amount);
                                         }
                                         else
                                         {
-                                            Console.WriteLine("Wrong Card number");
+                                            Console.WriteLine("Incorrect Account number");
                                         }
                                         break;
                                     case "5":
-                                        Console.WriteLine("Selected Number 6");
+                                        await aTMServices.checkStatment(user.userId);
                                         break;
                                     case "6":
                                         Console.WriteLine("Thank you and Goodbye");

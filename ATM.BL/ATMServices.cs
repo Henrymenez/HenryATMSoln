@@ -2,6 +2,7 @@
 using ATM.DAL.models;
 using Microsoft.Data.SqlClient;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
@@ -33,7 +34,7 @@ namespace ATM.BL
                     Value = cardnumber,
                     SqlDbType = SqlDbType.VarChar,
                     Direction = ParameterDirection.Input
-                    
+
                 }
                 });
 
@@ -43,7 +44,7 @@ namespace ATM.BL
                     while (dataReader.Read())
                     {
                         user.Name = dataReader["name"].ToString();
-                        user.userId =  Convert.ToInt32(dataReader["Id"]);
+                        user.userId = Convert.ToInt32(dataReader["Id"]);
                         user.cardPin = dataReader["Pin"].ToString();
                     }
                 }
@@ -59,7 +60,50 @@ namespace ATM.BL
             }
             return user;
         }
-        
+
+        public async Task<userViewModel> CheckAccountNumber(string accountnumber)
+        {
+            userViewModel user = new userViewModel();
+            try
+            {
+                SqlConnection sqlConn = await _dbContext.OpenConnection();
+
+                string getUserInfo = $"SELECT Users.name,Users.Id,Users.Pin FROM Users WHERE AccountNo = @accountnumber";
+                await using SqlCommand command = new SqlCommand(getUserInfo, sqlConn);
+                command.Parameters.AddRange(new SqlParameter[]
+                {
+                new SqlParameter
+                {
+                    ParameterName = "@accountnumber",
+                    Value = accountnumber,
+                    SqlDbType = SqlDbType.VarChar,
+                    Direction = ParameterDirection.Input
+
+                }
+                });
+
+
+                using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
+                {
+                    while (dataReader.Read())
+                    {
+                        user.Name = dataReader["name"].ToString();
+                        user.userId = Convert.ToInt32(dataReader["Id"]);
+                        user.cardPin = dataReader["Pin"].ToString();
+                    }
+                }
+
+                return user;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+
+            }
+            return user;
+        }
         public async Task deposit(int id, decimal amount)
         {
             try
@@ -87,21 +131,21 @@ namespace ATM.BL
                         user.balance = (decimal)dataReader["balance"];
                     }
                 }
-                
+
                 user.balance = user.balance + amount;
 
                 command.CommandText = $"UPDATE  Users SET balance = {user.balance}  WHERE Id = @UserId";
 
                 var result = await command.ExecuteNonQueryAsync();
-                 if (result > 0)
-                 {
-                     DateTime myDateTime = DateTime.Now;
-                     string sqlFormat = myDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                     string desc = $"Deposited a sum of {amount} into your account, you current balance is {user.balance}";
-                     command.CommandText = $"INSERT INTO Transactions (userId,receiverId,transactionType,desctiption,amount,status,createdAt)" +
-                          $" VALUES (@sendId,null,'Deposit',@desc,@amount,1,@date)";
-                     command.Parameters.AddRange(new SqlParameter[]
+                if (result > 0)
                 {
+                    DateTime myDateTime = DateTime.Now;
+                    string sqlFormat = myDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                    string desc = $"Deposited a sum of {amount} into your account, you current balance is {user.balance}";
+                    command.CommandText = $"INSERT INTO Transactions (userId,receiverId,transactionType,desctiption,amount,status,createdAt)" +
+                         $" VALUES (@sendId,null,'Deposit',@desc,@amount,1,@date)";
+                    command.Parameters.AddRange(new SqlParameter[]
+               {
                  new SqlParameter
                  {
                      ParameterName = "@sendId",
@@ -134,18 +178,18 @@ namespace ATM.BL
 
                  }
 
-                });
-                     await command.ExecuteNonQueryAsync();
+               });
+                    await command.ExecuteNonQueryAsync();
                     Console.WriteLine(id);
                     Console.WriteLine(user.balance);
                     Console.WriteLine(result);
                     Console.WriteLine("Deposit Was successful");
-                 }
-                 else
-                 {
-                     Console.WriteLine("Unsuccessful deposit");
+                }
+                else
+                {
+                    Console.WriteLine("Unsuccessful deposit");
 
-                 }
+                }
             }
             catch (Exception ex)
             {
@@ -262,6 +306,7 @@ namespace ATM.BL
         {
             try
             {
+                if (sender == receiver) throw new Exception("You can not send money to yourself");
                 //open connection
                 SqlConnection sqlConn = await _dbContext.OpenConnection();
 
@@ -435,7 +480,8 @@ namespace ATM.BL
                 {
                     while (dataReader.Read())
                     {
-                        user.balance = (decimal)dataReader["balance"];                   }
+                        user.balance = (decimal)dataReader["balance"];
+                    }
                 }
 
                 Console.WriteLine($"Your Balance is ${user.balance}");
@@ -449,60 +495,63 @@ namespace ATM.BL
             }
         }
 
-        /* public async Task checkStatment(Guid id)
-         {
-             try
-             {
-                 SqlConnection sqlConn = await _dbContext.OpenConnection();
+        public async Task checkStatment(int id)
+        {
+            try
+            {
+                SqlConnection sqlConn = await _dbContext.OpenConnection();
 
-                 string getTransactionInfo = $"SELECT Transactions.userId,Transactions.receiverId,Transactions.desctiption,Transactions.amount,Transactions.transactionType,Transactions.status,Transactions.createdAt FROM Transactions WHERE userId = @UserId";
-                 await using SqlCommand command = new SqlCommand(getTransactionInfo, sqlConn);
-                 command.Parameters.AddRange(new SqlParameter);[]
-                 {
+                string getTransactionInfo = $"SELECT Transactions.userId,Transactions.receiverId,Transactions.desctiption,Transactions.amount,Transactions.transactionType,Transactions.status,Transactions.createdAt FROM Transactions WHERE userId = @UserId";
+                await using SqlCommand command = new SqlCommand(getTransactionInfo, sqlConn);
+                command.Parameters.AddRange(new SqlParameter[]
+                {
                  new SqlParameter
                  {
                      ParameterName = "@UserId",
                      Value = id,
-                     SqlDbType = SqlDbType.UniqueIdentifier,
+                     SqlDbType = SqlDbType.Int,
                      Direction = ParameterDirection.Input,
                      Size = 50
                  }
-                 }
-                 List<transactionViewModel> transactions = new List<transactionViewModel>();
-                 using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
-                 {
-                     while (dataReader.Read())
-                     {
-                         transactions.Add(new transactionViewModel()
-                         {
-                             UserId = (Guid)dataReader["userId"],
-                             ReceiverId = dataReader["receiverId"].ToString() ?? " ",
-                             Description = dataReader["desctiption"].ToString(),
-                             TransactionType = dataReader["transactionType"].ToString(),
-                             Amount = (decimal)dataReader["amount"],
-                             Status = (bool)dataReader["status"],
-                             CreatedAt = (DateTime)dataReader["createdAt"]
-                         });
+                });
+                List<transactionViewModel> transactions = new List<transactionViewModel>();
+                using (SqlDataReader dataReader = await command.ExecuteReaderAsync())
+                {
+                    while (dataReader.Read())
+                    {
+                        transactions.Add(new transactionViewModel()
+                        {
+                            userId = (int)dataReader["userId"],
+                            ReceiverId = (string)dataReader["receiverId"].ToString() ?? "Null",
+                            Description = dataReader["desctiption"].ToString(),
+                            TransactionType = dataReader["transactionType"].ToString(),
+                            Amount = (decimal)dataReader["amount"],
+                            Status = (bool)dataReader["status"],
+                            CreatedAt = (DateTime)dataReader["createdAt"]
+                        });
 
 
-                     }
-                 }
+                    }
+                }
 
-                 foreach (transactionViewModel transaction in transactions)
-                 {
-                     Console.WriteLine($"User: {transaction.UserId}, Receiver: {transaction.ReceiverId}, " +
-                         $"Description: {transaction.Description}, Type: {transaction.TransactionType}, " +
-                         $"Amount: ${transaction.Amount}, Status: {transaction.Status}, Date: {transaction.CreatedAt}    \n");
-                 }
+                Console.WriteLine(transactions);
+               /* foreach (transactionViewModel transaction in transactions)
+                {
+                   
+                    Console.WriteLine($" {transaction.Description ?? "No Transaction Yet"}, Type: {transaction.TransactionType},\n" +
+                        $"Amount: {transaction.Amount}, Status: {transaction.Status}, Date: {transaction.CreatedAt}    \n");
+                    Console.WriteLine("-----------------------------------------------------------------------------");
+                }*/
 
-             }
-             catch (Exception ex)
-             {
-                 Console.WriteLine(ex.Message);
-                 Console.WriteLine(ex.StackTrace);
 
-             }
-         }*/
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+
+            }
+        }
 
         protected virtual void Dispose(bool disposing)
         {
